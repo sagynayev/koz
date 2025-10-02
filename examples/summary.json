@@ -1,0 +1,14 @@
+{
+  "title": "Team meeting — Report deadline",
+  "meeting_type": "team meeting",
+  "generated_at": "2025-10-02T00:00:00Z",
+  "topics": [
+    {
+      "topic": "Report",
+      "points": [
+        "Deadline: Friday",
+        "Responsible: Bob"
+      ]
+    }
+  ]
+}

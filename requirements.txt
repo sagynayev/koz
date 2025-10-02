@@ -1,0 +1,10 @@
+flask
+python-dotenv
+openai>=1.0.0
+pydub
+requests
+fsspec
+typer
+jinja2
+reportlab
+vosk
