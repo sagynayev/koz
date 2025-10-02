@@ -1,15 +1,9 @@
 import os, tempfile, json
-from pydub import AudioSegment
 from dotenv import load_dotenv
 load_dotenv("1.env")
 def _ensure_wav(path):
     if path.lower().endswith('.wav'):
         return path
-    # convert to wav
-    audio = AudioSegment.from_file(path)
-    out = tempfile.mktemp(suffix='.wav')
-    audio.export(out, format='wav')
-    return out
 
 def transcribe_file(path, provider=None):
     """Transcribe audio file.
