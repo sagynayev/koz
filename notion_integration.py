@@ -1,52 +1,65 @@
-import os, requests, json
+import os
+import json
+import requests
 from dotenv import load_dotenv
-load_dotenv('1.env')
 
-def create_notion_page(summary, tasks):
-    token = os.environ.get('NOTION_TOKEN')
-    database = os.environ.get('NOTION_DB')
-    if not token:
-        raise RuntimeError('NOTION_TOKEN not set')
+load_dotenv()
 
-    url = 'https://api.notion.com/v1/pages'
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-    }
+NOTION_TOKEN = os.getenv("NOTION_TOKEN")
+DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
 
-    # Страница встречи
-    body = {
-        'parent': {'database_id': database} if database else {'type':'page_id','page_id': os.environ.get('NOTION_PARENT_PAGE','')},
-        'properties': {
-            'Name': {'title':[{'text':{'content':summary.get('title','Meeting')}}]}
-        },
-        'children': []
-    }
+HEADERS = {
+    "Authorization": f"Bearer {NOTION_TOKEN}",
+    "Notion-Version": "2022-06-28",
+    "Content-Type": "application/json"
+}
 
-    # Topics
-    for topic in summary.get('topics', []):
-        body['children'].append({
-            'object':'block','type':'heading_2',
-            'heading_2':{'text':[{'type':'text','text':{'content':topic.get('topic','Topic')}}]}
-        })
-        for p in topic.get('points', []):
-            body['children'].append({
-                'object':'block','type':'paragraph',
-                'paragraph':{'text':[{'type':'text','text':{'content':str(p)}}]}
-            })
+def create_meeting_page(meeting_type: str):
+    with open("output/summary.json", encoding="utf-8") as f:
+        summary = json.load(f)
 
-    # Tasks → To-Do блоки
-    for task in tasks:
-        task_text = f"{task.get('title','Task')} | owner:{task.get('owner','-')} | due:{task.get('due','-')} | priority:{task.get('priority','-')}"
-        body['children'].append({
-            'object':'block','type':'to_do',
-            'to_do':{
-                'text':[{'type':'text','text':{'content':task_text}}],
-                'checked': False
+    with open("output/tasks.json", encoding="utf-8") as f:
+        tasks = json.load(f)
+
+    tasks_text = "\n".join(
+        f"- {t['task']} (priority: {t['priority']})"
+        for t in tasks
+    )
+
+    payload = {
+        "parent": {"database_id": DATABASE_ID},
+        "properties": {
+            "Name": {
+                "title": [
+                    {"text": {"content": "Meeting Summary"}}
+                ]
+            },
+            "Type": {
+                "select": {
+                    "name": meeting_type.strip().lower()
+                }
+            },
+            "Summary": {
+                "rich_text": [
+                    {"text": {"content": summary["summary"]}}
+                ]
+            },
+            "Tasks": {
+                "rich_text": [
+                    {"text": {"content": tasks_text}}
+                ]
             }
-        })
+        }
+    }
 
-    resp = requests.post(url, headers=headers, json=body, timeout=30)
-    resp.raise_for_status()
-    return resp.json()
+    r = requests.post(
+        "https://api.notion.com/v1/pages",
+        headers=HEADERS,
+        json=payload
+    )
+
+    if not r.ok:
+        print("Notion error:", r.status_code)
+        print(r.text)
+
+    r.raise_for_status()

@@ -1,0 +1,14 @@
+[
+  {
+    "task": "Создать четкий регламент для директора по проведению общих собраний.",
+    "owner": "TBD", /* !TBD = Unknown owner! */
+    "deadline": null,
+    "priority": "high"
+  },
+  {
+    "task": "Обучить директора, как правильно проводить общие собрания.",
+    "owner": "TBD",
+    "deadline": null,
+    "priority": "medium"
+  }
+]
